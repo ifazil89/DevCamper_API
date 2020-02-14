@@ -1,7 +1,7 @@
 const ErrorResponse = require("../util/errorResponse");
 const errorHandler = (err, req, res, next) => {
-    console.log(err);
-    let error = { ...err }; //copy all the porperty frim err to error
+    let error = err; //{ ...err }; //copy all the porperty frim err to error
+
     if (!err instanceof ErrorResponse) {
         error = new ErrorResponse(err.message, 500);
     }
@@ -14,6 +14,13 @@ const errorHandler = (err, req, res, next) => {
     if (err.name === "ValidationError") {
         const message = Object.values(err.errors).map(val => val.message);
         error = new ErrorResponse(message, 400);
+    }
+
+    if (err.name === "CastError" && err.kind === "ObjectId") {
+        error = new ErrorResponse(
+            "Invalid Object Id " + err.value + " of " + err.path,
+            400
+        );
     }
     res.status(500).json({
         success: false,
