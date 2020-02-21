@@ -9,8 +9,14 @@ const {
     bootcampPhotoUpload
 } = require("../controllers/bootcamps");
 
+const Bootcamp = require("../model/Bootcamp");
+const advancedResult = require("../middleware/advancedResults");
+
 //include course router to route course related url
 const courseRouter = require("./courses");
+
+//jwt security
+const { protect, authorize } = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -18,14 +24,14 @@ router.use("/:bootcampId/courses", courseRouter);
 
 router
     .route("/")
-    .get(getBootcamps)
-    .post(createBootcamp);
+    .get(advancedResult(Bootcamp, "courses"), getBootcamps)
+    .post(protect, authorize("publisher", "admin"), createBootcamp);
 
 router
     .route("/:id")
     .get(getBootcamp)
-    .put(updateBootcamp)
-    .delete(deleteBootcamp);
+    .put(protect, authorize("publisher", "admin"), updateBootcamp)
+    .delete(protect, authorize("publisher", "admin"), deleteBootcamp);
 
 router.route("/:id/photo").put(bootcampPhotoUpload);
 

@@ -22,7 +22,9 @@ const errorHandler = (err, req, res, next) => {
             400
         );
     }
-    res.status(500).json({
+
+    console.error(error);
+    res.status(error.statusCode).json({
         success: false,
         message: error.message
     });

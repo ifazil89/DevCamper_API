@@ -99,6 +99,24 @@ exports.getBootcamp = async (req, res, next) => {
 //  @access     Public
 exports.createBootcamp = async (req, res, next) => {
     try {
+        req.body.user = req.user.id;
+        const publishedBootcamp = await Bootcamp.find({ user: req.user.id });
+
+        if (
+            publishedBootcamp.length >=
+                parseInt(
+                    process.env.ALLOWED_BOOTCAMP_COUNT_FOR_OTHER_USER || 1
+                ) &&
+            !req.user.role !== "admin"
+        ) {
+            next(
+                new ErrorResponse(
+                    `The user with Id ${req.user.id} has already created ${publishedBootcamp.length} bootcamps`,
+                    400
+                )
+            );
+        }
+
         const bootcamp = await Bootcamp.create(req.body);
         res.status(201).json({
             status: true,
