@@ -14,6 +14,8 @@ const advancedResult = require("../middleware/advancedResults");
 
 //include course router to route course related url
 const courseRouter = require("./courses");
+//route to reviews related URL
+const reviewsRouter = require("./reviews");
 
 //jwt security
 const { protect, authorize } = require("../middleware/auth");
@@ -21,6 +23,7 @@ const { protect, authorize } = require("../middleware/auth");
 const router = express.Router();
 
 router.use("/:bootcampId/courses", courseRouter);
+router.use("/:bootcampId/reviews", reviewsRouter);
 
 router
     .route("/")

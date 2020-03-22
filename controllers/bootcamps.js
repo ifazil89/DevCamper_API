@@ -77,7 +77,7 @@ exports.getBootcamps = async (req, res, next) => {
 //  @access     Public
 exports.getBootcamp = async (req, res, next) => {
     try {
-        validateId(req.params.id);
+        await validateId(req, false);
         const bootcamp = await Bootcamp.findById(req.params.id).populate(
             "courses"
         );
@@ -132,7 +132,8 @@ exports.createBootcamp = async (req, res, next) => {
 //  @access     Public
 exports.updateBootcamp = async (req, res, next) => {
     try {
-        validateId(req.params.id);
+        await validateId(req, true);
+
         const bootcamp = await Bootcamp.findByIdAndUpdate(
             req.params.id,
             req.body,
@@ -141,9 +142,7 @@ exports.updateBootcamp = async (req, res, next) => {
                 runValidators: true //mongoose validator explicitly setting
             }
         );
-        if (!bootcamp) {
-            throw new ErrorResponse("No Data Found", 500);
-        }
+
         res.status(201).json({
             status: true,
             data: bootcamp
@@ -158,12 +157,10 @@ exports.updateBootcamp = async (req, res, next) => {
 //  @access     Public
 exports.deleteBootcamp = async (req, res, next) => {
     try {
-        validateId(req.params.id);
+        await validateId(req, true);
         //const bootcamp = await Bootcamp.findByIdAndDelete(req.params.id); - findByIdAndDelete will not trigger remove middleware in Bootcamp schema
         const bootcamp = await Bootcamp.findById(req.params.id);
-        if (!bootcamp) {
-            throw new Error("No Data Found");
-        }
+
         //added mto invoke remove middleware
         bootcamp.remove();
 
@@ -208,7 +205,7 @@ exports.getBootcampInRadius = asyncHandler(async (req, res, next) => {
 //  @route      PUT /api/v1/bootcamps/:id/photo
 //  @access     Private
 exports.bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
-    validateId(req.params.id);
+    await validateId(req, false);
     const bootcamp = await Bootcamp.findById(req.params.id);
     if (!bootcamp) {
         throw new ErrorResponse(`No Bootcamp Found for ${req.params.id}`, 404);
@@ -249,8 +246,28 @@ exports.bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
     });
 });
 
-validateId = id => {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+validateId = async (req, userCheck) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         throw new ErrorResponse("Invalid ID", 400);
+    }
+
+    if (userCheck) {
+        const bootcamp = await Bootcamp.findById(req.params.id);
+        if (!bootcamp) {
+            throw new ErrorResponse(
+                `Bootcamp not found with id ${req.params.id}`,
+                500
+            );
+        }
+        console.log(`user id: ${req.user.id} , ${req.user.name}`);
+        if (
+            bootcamp.user.toString() !== req.user.id &&
+            req.user.role !== "admin"
+        ) {
+            throw new ErrorResponse(
+                `User not having access to modifiy this Bootcamp with id ${req.params.id}`,
+                401
+            );
+        }
     }
 };

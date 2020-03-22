@@ -1,6 +1,16 @@
 const advancedResults = (model, populate) => async (req, res, next) => {
     const reqQuery = { ...req.query };
 
+    //console.log(req.query);
+    //?select=name,description&sort=-name&page=1&limit=2&averageCost[gt]=5000
+    /* {
+        select: 'name,description',
+        sort: '-name',
+        page: '1',
+        limit: '2',
+        averageCost: { gt: '5000' }
+      } */
+
     const removeFields = ["select", "sort", "page", "limit"];
     removeFields.forEach(param => delete reqQuery[param]);
 

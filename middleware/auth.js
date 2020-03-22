@@ -11,9 +11,9 @@ exports.protect = asyncHandler(async (req, res, next) => {
         req.headers.authorization.startsWith("Bearer")
     ) {
         token = req.headers.authorization.split(" ")[1];
-    } /* else if (req.cookies.token) {
+    } else if (req.cookies.token) {
         token = req.cookies.token;
-    } */
+    }
 
     //CHeck if token is avaialble
     if (!token) {
@@ -30,7 +30,9 @@ exports.protect = asyncHandler(async (req, res, next) => {
         }
         next();
     } catch (error) {
-        console.error(error);
+        console.log("Authentication  Error");
+        //console.error(error);
+        throw error;
     }
 });
 

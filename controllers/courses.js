@@ -54,13 +54,25 @@ exports.getCourse = asyncHandler(async (req, res, next) => {
 //  @access Private
 exports.createCourse = asyncHandler(async (req, res, next) => {
     req.body.bootcamp = req.params.bootcampId;
+    req.body.user = req.user.id;
     const bootcamp = await Bootcamp.findOne({ _id: req.params.bootcampId });
     //console.log(bootcamp);
     if (!bootcamp) {
         throw new ErrorResponse(
-            `No Bootcamp found for the bootcamp with id ${req.params.bootcampId}`
+            `No Bootcamp found for the bootcamp with id ${req.params.bootcampId}`,
+            404
         );
     }
+    //To check the bootcamp owner is same as the logged user
+    if (bootcamp.user.toString() !== req.user.id && req.user.role !== "admin") {
+        return next(
+            new ErrorResponse(
+                `User is not belong to the current bootcamp ${bootcamp.id}`,
+                401
+            )
+        );
+    }
+
     const course = await Course.create(req.body);
 
     res.status(200).json({
@@ -80,7 +92,14 @@ exports.updateCourse = asyncHandler(async (req, res, next) => {
             404
         );
     }
-
+    if (course.user.toString() !== req.user.id && req.user.role !== "admin") {
+        return next(
+            new ErrorResponse(
+                `User not authorized to update the course ${req.params.id}`,
+                401
+            )
+        );
+    }
     course = await Course.findByIdAndUpdate(req.params.id, req.body, {
         new: true, // return the updated object as response
         runValidators: true //mongoose validator explicitly setting
@@ -88,7 +107,6 @@ exports.updateCourse = asyncHandler(async (req, res, next) => {
         path: "bootcamp",
         select: "_id name description"
     });
-
     res.status(200).json({
         status: true,
         data: course
@@ -105,11 +123,10 @@ exports.deleteCourse = asyncHandler(async (req, res, next) => {
         return next(
             new ErrorResponse(
                 `No course found for the id ${req.params.id}`,
-                404
+                401
             )
         );
     }
-
     await course.remove();
     res.status(200).json({
         status: true,

@@ -115,7 +115,7 @@ BootcampSchema.pre("save", function(next) {
 //Create geolocation by using mapquest
 BootcampSchema.pre("save", async function(next) {
     const loc = await geocoder.geocode(this.address);
-    //console.log(loc);
+    console.log(loc);
     this.location = {
         type: "Point",
         coordinates: [loc[0].latitude, loc[0].longitude],
